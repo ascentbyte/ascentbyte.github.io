@@ -16,10 +16,10 @@ timezone:
 
 title: Ascentbyte Blog # the main title
 
-tagline: 安全小兵的成长之路 # it will display as the subtitle
+tagline: 安全小兵的成长笔记 # it will display as the subtitle
 
 description: >- # used by seo meta and the atom feed
-  学习应急响应、恶意代码分析与 Windows 内核安全的安全小兵
+  一个学习应急响应、恶意代码分析与 Windows 内核安全的安全小兵的成长笔记
 
 # Fill in the protocol & hostname for your site.
 # E.g. 'https://username.github.io', note that it does not end with a '/'.
@@ -98,7 +98,9 @@ theme_mode: # [light | dark]
 cdn:
 
 # the avatar on sidebar, support local or CORS resources
-avatar:
+avatar: /assets/images/avatar.png
+bio: "SecOps / IR / Memory Forensics / Malware Analysis"
+location: "Homelab · IR Lab"
 
 # The URL of the site-wide social preview image used in SEO `og:image` meta tag.
 # It can be overridden by a customized `page.image` in front matter.
