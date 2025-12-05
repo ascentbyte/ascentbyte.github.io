@@ -55,9 +55,6 @@ assets:
     enabled:
     env:
 
-# ==============================
-# Disable PWA & Cache for development
-# ==============================
 pwa:
   enabled: false
   cache:
