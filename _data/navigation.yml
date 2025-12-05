@@ -1,9 +1,15 @@
 main:
-  - title: "Posts"
-    url: /posts/
-  - title: "Categories"
-    url: /categories/
-  - title: "Tags"
+  - title: "主页"
+    url: /
+  - title: "Windows开发"
+    url: /windows/
+  - title: "Linux开发"
+    url: /linux/
+  - title: "恶意程序分析"
+    url: /analyze/
+  - title: "标签"
     url: /tags/
-  - title: "About"
+  - title: "项目"
+    url: /projects/
+  - title: "关于我"
     url: /about/
