@@ -1,14 +1,10 @@
-# ==============================
-#  Full Chirpy Theme Configuration
-# ==============================
-
 remote_theme: cotes2020/chirpy@v7.2.0
+
 lang: zh-CN
 timezone:
 
 title: Ascentbyte Blog
 tagline: 安全小兵的成长笔记
-
 description: >-
   记录从基础编程、Windows 内部机制、内存取证、应急响应到自研安全工具的完整学习过程。
 
@@ -62,17 +58,16 @@ assets:
 # ==============================
 # Disable PWA & Cache for development
 # ==============================
-
 pwa:
   enabled: false
   cache:
     enabled: false
-    deny_paths:
+    deny_paths: []
 
 paginate: 10
 
 kramdown:
-  footnote_backlink: "&#8617;&#xfe0e;"
+  footnote_backlink: "↩︎"
   syntax_highlighter: rouge
   syntax_highlighter_opts:
     css_class: highlight
@@ -96,12 +91,10 @@ defaults:
       comments: true
       toc: true
       permalink: /posts/:title/
-
   - scope:
       path: _drafts
     values:
       comments: false
-
   - scope:
       path: ""
       type: tabs
@@ -132,7 +125,6 @@ exclude:
   - "*.config.js"
   - "package*.json"
 
-# Archives system — works with full Chirpy
 jekyll-archives:
   enabled: [categories, tags]
   layouts:
