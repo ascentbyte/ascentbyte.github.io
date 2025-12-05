@@ -1,7 +1,8 @@
 remote_theme: cotes2020/chirpy@v7.2.0
 
 lang: zh-CN
-# timezone:
+# 建议加上时区，避免“未来文章”不显示的问题
+timezone: Asia/Shanghai
 
 title: Ascentbyte Blog
 tagline: 安全小兵的成长笔记
