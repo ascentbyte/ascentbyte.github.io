@@ -54,12 +54,19 @@ include:
 #   - jekyll-feed
 #   - jemoji
 #   - jekyll-include-cache
+# plugins:
+#   - jekyll-archives
+#   - jekyll-paginate
+#   - jekyll-sitemap
+#   - jekyll-feed
+#   - jekyll-seo-tag
 plugins:
-  - jekyll-archives
-  - jekyll-paginate
-  - jekyll-sitemap
-  - jekyll-feed
-  - jekyll-seo-tag
+    - jekyll-paginate
+    - jekyll-sitemap
+    - jekyll-feed
+    - jekyll-seo-tag
+    - jekyll-include-cache
+
 
 author:
   name   : "AscentByte"
