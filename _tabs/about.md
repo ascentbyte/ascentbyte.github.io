@@ -1,8 +1,13 @@
 ---
 # the default layout is 'page'
+layout: page
 icon: fas fa-info-circle
 order: 4
+title: 简介
 ---
 
-> Add Markdown syntax content to file `_tabs/about.md`{: .filepath } and it will show up on this page.
-{: .prompt-tip }
+欢迎来到 **安全小兵的成长之路**。
+
+这里将记录我从基础编程、汇编、操作系统底层、内存取证、应急响应自动化、红蓝对抗到自研安全工具的完整过程。
+
+希望这份旅程也能帮助同样学习安全的你。
