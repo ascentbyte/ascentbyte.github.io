@@ -3676,7 +3676,7 @@
             "主机": 4
           },
           "recommended_next": [
-            "win-credential-lsass"
+            "win-code-signing-trust"
           ],
           "common_mistakes": [
             "只查 RunKey"
@@ -3758,6 +3758,353 @@
             ]
           }
         },
+        {
+        "id": "win-code-signing-trust",
+        "domain_id": "windows",
+        "module": "Windows 软件证书、代码签名与信任链分析",
+        "level": "L1-L2",
+        "summary": "判断一个 EXE/DLL/SYS/MSI/脚本宿主是否可信，不能只看“有无签名”，还要看发布者、时间戳、证书链、吊销状态、策略命中与运行上下文。",
+        "mechanisms": [
+          "Authenticode / Catalog Signature / Embedded Signature",
+          "Publisher / Issuer / Certificate Chain / Trusted Root",
+          "Timestamp / Counter-signature / Revocation / CRL / OCSP",
+          "AppLocker / App Control for Business（WDAC）/ SmartScreen / MOTW"
+        ],
+        "commands": [
+          "Get-AuthenticodeSignature .\\sample.exe | Format-List *",
+          "signtool verify /pa /v sample.exe",
+          "sigcheck -i -h -m sample.exe",
+          "Get-ChildItem Cert:\\LocalMachine\\Root",
+          "Get-AppLockerPolicy -Effective -Xml"
+        ],
+        "tools": [
+          "PowerShell",
+          "SignTool",
+          "Sigcheck",
+          "Process Explorer",
+          "Autoruns"
+        ],
+        "detection": [
+          "不要把“已签名”直接等同于“安全”，要同时看路径、父子进程、命令行、哈希、时间戳、发布者与是否命中应用控制策略",
+          "重点识别：合法签名 LOLBin、被盗/异常发布者证书、旁加载、目录签名与嵌入签名差异、MOTW 绕过后执行",
+          "对 EXE/DLL/SYS/MSI/script host 分开看：对象类型不同，信任链、执行策略与告警语义也不同"
+        ],
+        "learning_order": [
+          "先学 Authenticode 与证书链",
+          "再学 Get-AuthenticodeSignature / SignTool / Sigcheck 的输出差异",
+          "再学 AppLocker / WDAC / SmartScreen / MOTW 联动",
+          "最后把签名判断放进持久化、进程、服务、驱动排查"
+        ],
+        "labs": [
+          {
+            "title": "选取 10 个系统文件、第三方正常软件和可疑样本，分别用 Get-AuthenticodeSignature、signtool、sigcheck 做对比验证",
+            "env": [
+              "Windows 10/11 VM"
+            ],
+            "duration": "60m",
+            "difficulty": "L1",
+            "safety": "隔离环境"
+          },
+          {
+            "title": "构造“微软签名主程序 + 同目录恶意 DLL”旁加载实验，记录签名、加载路径、进程链和告警差异",
+            "env": [
+              "Windows 10 VM"
+            ],
+            "duration": "90m",
+            "difficulty": "L2",
+            "safety": "隔离环境"
+          }
+        ],
+        "outputs": [
+          {
+            "title": "Windows 签名与信任链检查清单",
+            "format": "markdown",
+            "template_id": "win-signing-checklist-md"
+          },
+          {
+            "title": "签名验证脚本（PowerShell/C）",
+            "format": "markdown",
+            "template_id": null
+          }
+        ],
+        "acceptance": [
+          "给定一个可执行对象，能说明它是否签名、谁签的、链是否可信、时间戳是否合理、是否应被当前策略允许执行",
+          "能解释“有签名但仍然危险”的至少 4 种情况",
+          "能把签名分析用于持久化、LOLBin、旁加载、驱动排查"
+        ],
+        "self_test": [
+          "Q1: 请解释 Authenticode 与普通 TLS/HTTPS 证书的区别。",
+          "Q2: 请说明 Embedded Signature 与 Catalog Signature 的差异。",
+          "Q3: 请解释为什么“有签名”不等于“安全”。",
+          "Q4: 请说明时间戳在代码签名验证中的作用。",
+          "Q5: 请描述 Get-AuthenticodeSignature、signtool verify、sigcheck 三者的使用差异。",
+          "Q6: 请解释发布者（Publisher）与签发者（Issuer）的区别。",
+          "Q7: 请说明 AppLocker 与 WDAC 在代码信任控制上的差异。",
+          "Q8: 请描述合法签名 LOLBin 为什么仍可被攻击者滥用。",
+          "Q9: 请解释 DLL Search Order Hijacking 与签名判断之间的关系。",
+          "Q10: 请说明 MOTW 绕过为什么也应归入这一模块的学习范围。"
+        ],
+        "self_test_answers": [
+          {
+            "q": "Q1",
+            "key_points": [
+              "Authenticode 面向代码对象签名",
+              "TLS 主要用于通信对端身份与传输保护"
+            ],
+            "score_rubric": "答出对象差异 + 用途差异 = 通过"
+          },
+          {
+            "q": "Q2",
+            "key_points": [
+              "Embedded 写在文件内",
+              "Catalog 由目录文件为对象集提供签名"
+            ],
+            "score_rubric": "答出位置 + 验证差异 = 通过"
+          },
+          {
+            "q": "Q3",
+            "key_points": [
+              "证书可能被盗用",
+              "签名主程序可加载未签名恶意 DLL",
+              "合法签名二进制可被代理执行滥用"
+            ],
+            "score_rubric": "答出至少 2 点 = 通过"
+          },
+          {
+            "q": "Q4",
+            "key_points": [
+              "证明签名发生时间",
+              "证书过期后仍可能因有效时间戳而成立"
+            ],
+            "score_rubric": "答出作用 = 通过"
+          },
+          {
+            "q": "Q5",
+            "key_points": [
+              "Get-AuthenticodeSignature 便于脚本化",
+              "signtool 适合官方验证与细节输出",
+              "sigcheck 适合批量 triage 与证书链观察"
+            ],
+            "score_rubric": "答出三者定位 = 通过"
+          },
+          {
+            "q": "Q6",
+            "key_points": [
+              "Publisher 是被签名对象声明的发布者",
+              "Issuer 是签发该证书的 CA"
+            ],
+            "score_rubric": "答出角色差异 = 通过"
+          },
+          {
+            "q": "Q7",
+            "key_points": [
+              "AppLocker 偏应用控制规则",
+              "WDAC/App Control for Business 更强，覆盖用户态与内核态代码信任控制"
+            ],
+            "score_rubric": "答出能力差异 = 通过"
+          },
+          {
+            "q": "Q8",
+            "key_points": [
+              "签名程序可作为代理执行器",
+              "会绕过部分基于未签名/未知二进制的拦截思路"
+            ],
+            "score_rubric": "答出原理 = 通过"
+          },
+          {
+            "q": "Q9",
+            "key_points": [
+              "主程序可能有合法签名",
+              "但被优先加载的 DLL 可能无签名或不可信"
+            ],
+            "score_rubric": "答出关系 = 通过"
+          },
+          {
+            "q": "Q10",
+            "key_points": [
+              "MOTW 属于 Windows 信任/执行控制链的一部分",
+              "绕过后会影响用户提示、脚本执行与受保护视图"
+            ],
+            "score_rubric": "答出与信任控制的关系 = 通过"
+          }
+        ],
+        "resources": [
+          {
+            "title": "Get-AuthenticodeSignature 官方文档",
+            "type": "docs",
+            "url": "https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.security/get-authenticodesignature?view=powershell-7.5",
+            "why": "官方 PowerShell 签名检查入口",
+            "difficulty": "L1-L2"
+          },
+          {
+            "title": "SignTool 官方文档",
+            "type": "docs",
+            "url": "https://learn.microsoft.com/en-us/windows/win32/seccrypto/signtool",
+            "why": "官方签名验证/时间戳工具",
+            "difficulty": "L1-L2"
+          },
+          {
+            "title": "Sigcheck 官方文档",
+            "type": "docs",
+            "url": "https://learn.microsoft.com/en-us/sysinternals/downloads/sigcheck",
+            "why": "快速查看签名、版本、哈希与证书链",
+            "difficulty": "L1-L2"
+          },
+          {
+            "title": "WinVerifyTrust 官方文档",
+            "type": "docs",
+            "url": "https://learn.microsoft.com/en-us/windows/win32/api/wintrust/nf-wintrust-winverifytrust",
+            "why": "自研工具做签名验证时的核心 API",
+            "difficulty": "L2"
+          },
+          {
+            "title": "App Control for Business / AppLocker Overview",
+            "type": "docs",
+            "url": "https://learn.microsoft.com/en-us/windows/security/application-security/application-control/app-control-for-business/appcontrol-and-applocker-overview",
+            "why": "把签名、发布者和应用控制策略串起来",
+            "difficulty": "L1-L2"
+          }
+        ],
+        "study_view": {
+            "version": "lecture-v1",
+            "what_to_learn": [
+              "学会判断一个 EXE/DLL/SYS/MSI/脚本宿主是否真的可信，而不是只看“有没有签名”。",
+              "理解 Windows 代码签名、证书链、时间戳、吊销检查、发布者与应用控制策略之间的关系。",
+              "把签名分析能力接到持久化、LOLBin、旁加载、驱动排查和自研工具开发中。"
+            ],
+            "why_it_matters": [
+              "Windows 主机排查里，很多工程师会看路径、父子进程、启动项，但不会系统判断“这个文件在 Windows 信任模型里到底算不算可信”。",
+              "攻击者并不总是使用未签名样本；他们可能滥用已签名 LOLBin、被盗证书、合法主程序 + 恶意 DLL 旁加载等方式绕过粗糙的信任判断。",
+              "如果你未来要做 IR 工具、启动项检查器、进程分析器、驱动排查器，这块能力必须内建。"
+            ],
+            "must_master": [
+              "Authenticode、Embedded Signature、Catalog Signature",
+              "Publisher、Issuer、Certificate Chain、Trusted Root、EKU",
+              "Timestamp / Counter-signature、Revocation、CRL、OCSP",
+              "MOTW、SmartScreen、AppLocker、WDAC / App Control for Business",
+              "“有签名”≠“安全”，“微软签名”≠“行为正常”"
+            ],
+            "must_recognize": [
+              "命令/调查入口：Get-AuthenticodeSignature、signtool verify /pa /v、sigcheck -i -h -m、Get-AppLockerPolicy",
+              "关键工具：PowerShell、SignTool、Sigcheck、Autoruns、Process Explorer",
+              "关键对象：EXE、DLL、SYS、MSI、脚本宿主、目录签名（Catalog）、证书链、时间戳",
+              "关键判断维度：签名状态、发布者、签发者、链是否可信、时间戳是否合理、是否被吊销、是否命中应用控制策略"
+            ],
+            "attacker_usage": [
+              "滥用合法签名 LOLBin 作为代理执行器，借系统信任外衣执行恶意内容。",
+              "使用被盗证书或异常发布者证书对恶意文件签名，提升迷惑性和绕过率。",
+              "利用“已签名主程序 + 未签名恶意 DLL”进行旁加载或 DLL Search Order Hijacking。",
+              "绕过 MOTW、SmartScreen 或应用控制策略后执行恶意内容。",
+              "借受信任路径、受信任发布者规则或粗糙白名单放行恶意执行链。"
+            ],
+            "defender_view": [
+              "不要只看文件属性里的“数字签名”页；必须联合路径、父子进程、命令行、哈希、加载关系和策略命中一起判断。",
+              "区分对象类型：EXE/DLL/SYS/MSI/脚本宿主的信任语义和排查重点不同。",
+              "重点关注：合法签名二进制滥用、发布者异常、时间戳异常、目录签名与嵌入签名差异、签名主程序加载未签名模块。"
+            ],
+            "developer_skills": [
+              "会调用 WinVerifyTrust 或等价方式做签名/信任验证。",
+              "能够提取并输出：签名状态、发布者、签发者、时间戳、证书链、哈希、文件路径、策略命中结果。",
+              "把签名检查整合到启动项、服务、驱动、进程、模块、计划任务等枚举器中。",
+              "设计结果输出时不要只给“Signed/Unsigned”，而要给出可用于排查的解释性字段。",
+              "为 LOLBin、旁加载、驱动与持久化场景设计签名联动检查逻辑。"
+            ],
+            "minimum_bar": [
+              "给定一个可执行对象，能说清：是否签名、谁签的、链是否可信、时间戳是否合理、是否应被当前策略允许执行。",
+              "能解释至少 4 种“有签名但仍然危险”的情况。",
+              "能把签名分析用到持久化、进程、服务、驱动或旁加载排查里。"
+            ],
+            "practice": [
+              "用 Get-AuthenticodeSignature、signtool、sigcheck 分别检查 10 个系统文件、第三方软件和可疑样本，对比三者输出差异。",
+              "做一组“已签名主程序 + 未签名 DLL”的旁加载实验，记录签名、路径、加载关系和进程链。",
+              "写一个最小签名检查脚本，输出路径、哈希、签名状态、发布者、时间戳与备注。"
+            ],
+            "learning_path": [
+              "先学 Authenticode 与证书链基础概念。",
+              "再掌握 Get-AuthenticodeSignature、SignTool、Sigcheck 的输出差异。",
+              "再学习 AppLocker / WDAC / SmartScreen / MOTW 与代码信任控制。",
+              "最后把签名分析接入持久化、LOLBin、旁加载、驱动排查和工具开发。"
+            ],
+            "prerequisites": [
+              "win-process-lolbin",
+              "win-persistence"
+            ],
+            "next_steps": [
+              "win-credential-lsass"
+            ]
+        },
+        "prerequisites": [
+          "win-process-lolbin",
+          "win-persistence"
+        ],
+        "attack_tags": [
+          "T1553.002",
+          "T1218",
+          "T1574.001",
+          "T1553.005"
+        ],
+        "tags": {
+          "platform": [
+            "Windows"
+          ],
+          "topic": [
+            "签名",
+            "证书",
+            "信任"
+          ],
+          "level": [
+            "L1-L2"
+          ],
+          "track": [
+            "HostIR"
+          ]
+        },
+        "maturity_weights": {
+          "主机": 4,
+          "检测": 3,
+          "身份": 1
+        },
+        "recommended_next": [
+          "win-credential-lsass"
+        ],
+        "common_mistakes": [
+          "只看文件属性里的“数字签名”页，不验证证书链与时间戳",
+          "把“微软签名”直接等同于“行为正常”",
+          "只看主程序签名，不看其加载的 DLL/驱动/脚本宿主"
+        ],
+        "evidence_questions": [
+          "谁做的？",
+          "从哪来？",
+          "做了什么？",
+          "还影响了什么？",
+          "下一步看哪？"
+        ],
+        "estimated_hours": 8,
+        "lecture_desc": "Windows 主机排查里，签名不是“有/无”二元判断，而是一个完整的信任模型：对象类型、发布者、证书链、时间戳、吊销状态、策略命中、运行上下文，都要一起看。",
+        "teaching_notes": [
+          "先用一句话说清它在攻击链/排查链里的位置。",
+          "重点机制：Authenticode / Embedded / Catalog Signature",
+          "重点机制：Publisher / Issuer / Certificate Chain / Timestamp",
+          "重点机制：AppLocker / WDAC / SmartScreen / MOTW",
+          "先看：Get-AuthenticodeSignature",
+          "先看：signtool verify /pa /v",
+          "注意：合法签名二进制可以被代理执行滥用",
+          "注意：签名判断必须和路径、父链、模块加载、策略命中一起看"
+        ],
+        "first_steps_checklist": [
+          "确认对象类型（EXE/DLL/SYS/MSI/script host）",
+          "检查签名状态、发布者、时间戳与证书链",
+          "结合路径、父进程、命令行、哈希、加载关系做上下文判断",
+          "沉淀为检查清单、验证脚本或告警规则"
+        ],
+        "resource_digest": [
+          "Get-AuthenticodeSignature 官方文档",
+          "SignTool 官方文档",
+          "Sigcheck 官方文档",
+          "WinVerifyTrust 官方文档",
+          "App Control for Business / AppLocker Overview"
+        ]
+      },
         {
           "id": "win-credential-lsass",
           "domain_id": "windows",
