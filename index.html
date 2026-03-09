@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IR / DFIR / RE Capability Map</title>
+  <style>
+    /* 恢复温润圆角与黄色点缀的极简扁平风 */
+    :root {
+      --bg: #f4f7fb;
+      --panel: #ffffff;
+      --ink: #0f172a;
+      --muted: #64748b;
+      --line: #e2e8f0;
+      --nav: #0b1220;
+      --nav-hover: #1e293b;
+      --primary: #2563eb;
+      --primary-light: #eff6ff;
+      --accent: #f59e0b;      /* 核心：亮黄色/琥珀色点缀找回来了 */
+      --accent-light: #fef3c7;
+      --green: #10b981;
+      --green-bg: #ecfdf5;
+      --blue-bg: #eff6ff;
+      --purple-bg: #f5f3ff;
+      --red-bg: #fef2f2;
+      --amber-bg: #fffbeb;
+      --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); /* 极轻微的扁平投影 */
+      --radius: 20px;         /* 核心：20px 的大圆角找回来了！ */
+      --sidebar-w: 280px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    html, body { height: 100%; margin: 0; }
+    body {
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      color: var(--ink);
+      background: var(--bg); /* 纯色背景，无渐变光晕 */
+      overflow: hidden;
+    }
+
+    a { color: var(--primary); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    *:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+    /* 让侧边栏激活状态重新使用黄色点缀 */
+    .nav button.active {
+      background: var(--accent); /* 激活菜单变为亮黄色 */
+      color: #fff; 
+      font-weight: 700;
+      box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2); /* 黄色微光 */
+    }
+    .nav button.active .nav-count {
+      background: rgba(255,255,255,0.2);
+      color: #fff;
+    }
+
+    /* 恢复卡片的大圆角 */
+    .hero, .panel, .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius); /* 20px 圆角生效 */
+      box-shadow: var(--shadow);
+    }
+    
+    /* 让领域的左侧主线条也用亮黄色点缀 */
+    .domain-head { border-left: 6px solid var(--accent); }
+    
+    /* 搜索框和大按钮的圆角也一并恢复 */
+    .search {
+      width: 100%; padding: 15px 18px; border: 1px solid var(--line);
+      border-radius: 16px; font-size: 15px; box-shadow: var(--shadow);
+    }
+    .search:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-light); }
+
+    /* 整体分栏布局 */
+    .layout {
+      display: grid;
+      grid-template-columns: var(--sidebar-w) minmax(0, 1fr);
+      min-height: 100vh;
+    }
+
+    /* 左侧边栏：纯粹深色，无光晕 */
+    .sidebar {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      color: #f8fafc;
+      background: var(--nav);
+      border-right: 1px solid #1f2937;
+    }
+
+    .brand {
+      padding: 24px 20px 16px;
+      border-bottom: 1px solid var(--nav-hover);
+      cursor: pointer;
+    }
+    .brand h1 { margin: 0; font-size: 20px; font-weight: 700; letter-spacing: -0.02em; }
+    .brand p { margin: 6px 0 0; color: #94a3b8; font-size: 13px; line-height: 1.5; }
+
+    .brand-meta { display: flex; gap: 8px; margin-top: 12px; }
+    .brand-pill {
+      padding: 4px 8px; border-radius: 4px;
+      background: #1f2937; color: #93c5fd;
+      font-size: 11px; font-weight: 600; border: 1px solid #374151;
+    }
+
+    .sidebar-scroll {
+      flex: 1; overflow-y: auto; padding: 16px 12px;
+      scrollbar-width: thin; scrollbar-color: #374151 transparent;
+    }
+    .sidebar-scroll::-webkit-scrollbar { width: 6px; }
+    .sidebar-scroll::-webkit-scrollbar-thumb { background: #374151; border-radius: 4px; }
+
+    .nav-group { margin-bottom: 24px; }
+    .nav-caption {
+      padding: 0 10px 8px; font-size: 12px; color: #6b7280;
+      text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em;
+    }
+
+    .nav { display: flex; flex-direction: column; gap: 4px; }
+    .nav button {
+      appearance: none; width: 100%; border: none; background: transparent;
+      color: #d1d5db; padding: 10px 12px; border-radius: 6px;
+      text-align: left; font-size: 14px; cursor: pointer; transition: 0.15s;
+    }
+    .nav button:hover { background: var(--nav-hover); color: #fff; }
+    .nav button.active {
+      background: var(--primary); color: #fff; font-weight: 600;
+    }
+    
+    .nav-btn-inner { display: flex; justify-content: space-between; align-items: center; }
+    .nav-count {
+      background: rgba(255,255,255,0.1); padding: 2px 8px;
+      border-radius: 12px; font-size: 11px; color: #e5e7eb;
+    }
+
+    .nav-notes-btn { border: 1px solid #374151 !important; color: #93c5fd !important; }
+
+    .footer {
+      padding: 16px; border-top: 1px solid var(--nav-hover); background: #0f172a;
+    }
+    .footer-label { display: block; color: #6b7280; font-size: 12px; font-weight: 600; margin-bottom: 4px; }
+    #footer-progress { font-size: 13px; color: #d1d5db; font-weight: 500; }
+
+    /* 右侧主内容区 */
+    .main {
+      height: 100vh; overflow-y: auto; padding: 32px 40px;
+    }
+
+    /* 纯净的卡片与面板风格 */
+    .hero, .panel, .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+    .hero { padding: 32px; margin-bottom: 24px; }
+    .hero h2 { margin: 0 0 8px; font-size: 28px; font-weight: 700; color: var(--ink); }
+    .hero p { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.6; }
+
+    /* 搜索框 */
+    .search-wrap { position: sticky; top: 0; z-index: 20; margin-bottom: 20px; padding-top: 10px; background: var(--bg); }
+    .search {
+      width: 100%; padding: 14px 16px; border: 1px solid var(--line);
+      border-radius: var(--radius); font-size: 15px; box-shadow: var(--shadow);
+    }
+    .search:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-light); }
+
+    /* 领域标题与工具栏 */
+    .domain-head { border-left: 4px solid var(--primary); }
+    .domain-tools { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px; }
+    .domain-count { color: var(--muted); font-size: 14px; font-weight: 500; }
+    
+    /* 干净的操作按钮 */
+    .toolbar { display: flex; gap: 8px; }
+    .btn-action {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: #ffffff; border: 1px solid var(--line);
+      padding: 8px 12px; border-radius: 6px; cursor: pointer;
+      color: var(--ink); font-size: 13px; font-weight: 600; box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+    .btn-action:hover { background: #f8fafc; border-color: #cbd5e1; }
+
+    /* 知识模块卡片 */
+    .cards { display: flex; flex-direction: column; gap: 16px; }
+    .card { overflow: hidden; transition: border-color 0.2s; }
+    .card.done { border-left: 4px solid var(--green); }
+    .card:hover { border-color: #cbd5e1; }
+    
+    .card-header { padding: 20px 24px; cursor: pointer; background: #ffffff; display: flex; flex-direction: column; gap: 12px; }
+    .title-row { display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; }
+    .title-main h4 { margin: 0 0 6px; font-size: 18px; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+    .module-id { background: #f1f5f9; border: 1px solid var(--line); padding: 2px 8px; border-radius: 4px; font-size: 12px; color: var(--muted); font-family: monospace; }
+    .summary { color: var(--muted); line-height: 1.6; margin: 0; font-size: 14px; }
+    
+    .title-actions { display: flex; gap: 8px; align-items: center; }
+    
+    /* 扁平化复选框按钮 */
+    .donebox {
+      display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600;
+      color: var(--green); cursor: pointer; padding: 6px 10px;
+      background: var(--green-bg); border: 1px solid #a7f3d0; border-radius: 6px;
+    }
+    .donebox input { margin: 0; accent-color: var(--green); }
+    
+    /* 扁平化展开按钮 */
+    .expand-btn {
+      border: 1px solid #bfdbfe; background: var(--blue-bg); color: var(--primary);
+      padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer;
+    }
+    .expand-btn:hover { background: #dbeafe; }
+
+    /* 标签样式 */
+    .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+    .chip { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 500; border: 1px solid var(--line); }
+    .chip-platform { background: var(--blue-bg); color: var(--primary); border-color: #bfdbfe; }
+    .chip-topic { background: var(--bg); color: var(--muted); }
+    .chip-attack { background: var(--red-bg); color: #dc2626; border-color: #fecaca; font-family: monospace; }
+
+    /* 信息数据格 */
+    .quick-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-top: 12px; border-top: 1px dashed var(--line); padding-top: 16px; }
+    .quick-box .label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 4px; }
+    .quick-box .value { font-size: 13px; color: var(--ink); line-height: 1.5; }
+
+    /* 讲义展开详情区（平滑动画保留） */
+    .card-detail {
+      display: none; border-top: 1px solid var(--line);
+      background: #fafafa; padding: 24px;
+    }
+    .card-detail.show {
+      display: block;
+      animation: slideDown 0.3s ease forwards;
+    }
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-5px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    
+    /* 讲义框线框风格 */
+    .detail-box {
+      border: 1px solid var(--line); border-radius: 6px; padding: 16px; background: #ffffff;
+    }
+    .detail-box h5 { margin: 0 0 12px; font-size: 14px; font-weight: 600; color: var(--ink); border-bottom: 1px solid var(--line); padding-bottom: 8px; }
+    .detail-box p, .detail-box li { font-size: 14px; color: #374151; line-height: 1.6; }
+    .detail-box ul { margin: 0; padding-left: 20px; }
+    .detail-box li { margin-bottom: 6px; }
+    
+    /* 去除大面积色块，改用柔和的左侧边框标识特定区块 */
+    .detail-box.mechanisms { border-left: 4px solid var(--primary); }
+    .detail-box.detect { border-left: 4px solid var(--green); }
+    .detail-box.warn { border-left: 4px solid var(--accent); }
+    .detail-box.labs { border-left: 4px solid #8b5cf6; }
+
+    /* 列表项扁平化 */
+    .resource-list, .lab-list, .qa-list { display: flex; flex-direction: column; gap: 8px; }
+    .resource-item, .lab-item { padding: 12px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); }
+    .resource-meta, .lab-meta { font-size: 12px; color: var(--muted); margin-top: 4px; }
+    .lab-title { font-weight: 600; color: var(--ink); font-size: 14px; }
+
+    /* 自测题面板 */
+    .qa-item { border: 1px solid var(--line); border-radius: 6px; background: #fff; }
+    .qa-item summary { cursor: pointer; padding: 12px; font-weight: 600; font-size: 14px; color: var(--ink); outline: none; }
+    .qa-item[open] summary { border-bottom: 1px dashed var(--line); background: var(--bg); }
+    .qa-answer { padding: 12px; font-size: 13px; color: #374151; background: #fff; }
+    .qa-answer p { margin: 0 0 6px; line-height: 1.5; }
+
+    /* 原始数据折叠 */
+    .raw-box { background: var(--bg); border: 1px dashed #cbd5e1; }
+    .raw-box summary { cursor: pointer; font-weight: 600; color: var(--muted); font-size: 14px; }
+    .raw-box-content { padding-top: 16px; }
+
+    /* 概览统计面板 */
+    .overview-stack { display: grid; gap: 24px; }
+    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+    .stat-card { border: 1px solid var(--line); border-radius: 6px; padding: 16px; background: #fff; }
+    .stat-card .label { font-size: 13px; color: var(--muted); }
+    .stat-card .value { font-size: 24px; font-weight: 700; color: var(--ink); margin-top: 4px; }
+
+    .phase-grid, .maturity-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .phase-card, .maturity-card { border: 1px solid var(--line); border-radius: 6px; padding: 16px; background: #fff; }
+    .phase-card h4, .maturity-card h4 { margin: 0 0 8px; font-size: 16px; font-weight: 600; }
+    .phase-card p, .maturity-card p { margin: 0; font-size: 14px; color: var(--muted); }
+
+    .hidden { display: none !important; }
+
+    @media (max-width: 1024px) {
+      .detail-grid, .phase-grid, .maturity-grid { grid-template-columns: 1fr; }
+      .stats-grid { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 768px) {
+      .layout { display: block; }
+      .sidebar { position: static; height: auto; border-right: none; border-bottom: 1px solid #1f2937; }
+      .sidebar-scroll { max-height: 300px; }
+      .main { height: auto; padding: 20px; overflow: visible; }
+      .title-row { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    
+    <aside class="sidebar">
+      <div class="brand" onclick="showOverview()">
+        <h1>Capabilities Map</h1>
+        <p>安全能力建设与实战讲义字典</p>
+        <div class="brand-meta">
+          <span class="brand-pill">DFIR / RE</span>
+          <span class="brand-pill">V6.1 Flat</span>
+        </div>
+      </div>
+
+      <div class="sidebar-scroll">
+        <section class="nav-group">
+          <div class="nav-caption">知识域导航</div>
+          <div class="nav" id="nav"></div>
+        </section>
+
+        <section class="nav-group">
+          <div class="nav-caption">个人沉淀</div>
+          <div class="nav">
+            <button id="nav-notes" class="nav-notes-btn" onclick="showNotes()">
+              <span class="nav-btn-inner">
+                <span class="nav-label">📚 我的学习笔记</span>
+              </span>
+            </button>
+          </div>
+        </section>
+      </div>
+
+      <div class="footer">
+        <span class="footer-label">学习进度</span>
+        <div id="footer-progress">加载中...</div>
+      </div>
+    </aside>
+
+    <main class="main" id="scroll-container">
+      <div id="error-container"></div>
+
+      <div id="view-overview" class="hidden">
+        <div class="hero">
+          <h2 id="hero-title"></h2>
+          <p id="hero-desc"></p>
+        </div>
+
+        <div class="overview-stack">
+          <div class="panel" style="padding: 24px;">
+            <h3 style="margin: 0 0 12px; font-size: 18px;">极简使用说明</h3>
+            <p style="color: var(--muted); margin: 0; font-size: 14px;">
+              左侧为大纲导航。右侧为能力模块。点击卡片右上角的「展开讲义」，即可查阅核心机制、排查心法与参考实验。支持纯净全局搜索。
+            </p>
+          </div>
+
+          <div class="panel" style="padding: 24px;">
+            <h3 style="margin: 0 0 16px; font-size: 18px;">能力总览</h3>
+            <div id="overview-stats" class="stats-grid"></div>
+          </div>
+
+          <div class="panel" style="padding: 24px;">
+            <h3 style="margin: 0 0 16px; font-size: 18px;">阶段路线</h3>
+            <div id="overview-phases" class="phase-grid"></div>
+          </div>
+
+          <div class="panel" style="padding: 24px;">
+            <h3 style="margin: 0 0 16px; font-size: 18px;">成熟度分层</h3>
+            <div id="overview-maturity" class="maturity-grid"></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="view-domain" class="hidden">
+        <div class="domain-head hero">
+          <h2 id="domain-title"></h2>
+          <p id="domain-desc"></p>
+        </div>
+
+        <div class="search-wrap">
+          <input id="searchInput" class="search" placeholder="全局/局部搜索：支持检索模块名、知识点、机制、ATT&CK 标签等..." />
+        </div>
+
+        <div class="domain-tools">
+          <div id="domain-count" class="domain-count"></div>
+          <div class="toolbar">
+            <button type="button" class="btn-action" onclick="expandAllVisible()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 9l-7 7-7-7"></path></svg>
+              全部展开
+            </button>
+            <button type="button" class="btn-action" onclick="collapseAllVisible()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 15l7-7 7 7"></path></svg>
+              全部收起
+            </button>
+          </div>
+        </div>
+
+        <div id="cards" class="cards"></div>
+      </div>
+
+      <div id="view-notes" class="hidden">
+        <div class="domain-head hero">
+          <h2>📚 学习笔记与沉淀</h2>
+          <p>此处汇总了配置在各模块中的博客与实操链接。</p>
+        </div>
+        <div id="notes-list" class="cards"></div>
+      </div>
+    </main>
+  </div>
+
+  <script src="./app.js"></script>
+</body>
+</html>
